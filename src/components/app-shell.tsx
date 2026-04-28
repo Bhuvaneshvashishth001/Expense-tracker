@@ -1,3 +1,4 @@
+//app-shell.tsx
 import { useEffect, useState } from "react";
 import { Outlet } from "@tanstack/react-router";
 import { AppSidebar } from "./app-sidebar";
