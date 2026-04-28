@@ -1,7 +1,7 @@
 import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuthSession } from "@/lib/auth-store";
-
+// nav baar
 export function AppNavbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { theme, toggle } = useTheme();
   const { user } = useAuthSession();
