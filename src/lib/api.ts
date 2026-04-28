@@ -1,3 +1,4 @@
+//api.ts file
 import { AuthUser, NotificationSettings, clearSession, getAuthToken } from "./auth-store";
 import { Category } from "./mock-data";
 // hello
