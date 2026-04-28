@@ -4,7 +4,7 @@ import { AppSidebar } from "./app-sidebar";
 import { AppNavbar } from "./app-navbar";
 import { getCurrentUser } from "@/lib/api";
 import { clearSession, getAuthToken, updateStoredUser } from "@/lib/auth-store";
-
+// shell 
 export function AppShell() {
   const [open, setOpen] = useState(false);
 
