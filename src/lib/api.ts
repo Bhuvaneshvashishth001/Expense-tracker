@@ -1,6 +1,6 @@
 import { AuthUser, NotificationSettings, clearSession, getAuthToken } from "./auth-store";
 import { Category } from "./mock-data";
-
+// hello
 export type TransactionType = "income" | "expense";
 
 export type Transaction = {
