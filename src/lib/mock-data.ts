@@ -1,3 +1,4 @@
+//mock-data.ts
 export type Category =
   | "Food & Dining"
   | "Transport"
