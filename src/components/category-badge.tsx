@@ -1,5 +1,5 @@
 import { CATEGORY_COLORS, Category } from "@/lib/mock-data";
-
+// category
 export function CategoryDot({ category }: { category: Category }) {
   return (
     <span
