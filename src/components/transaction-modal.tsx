@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { CATEGORIES, Category, Transaction } from "@/lib/mock-data";
+import { Transaction, TransactionPayload } from "@/lib/api";
+import { CATEGORIES, Category } from "@/lib/mock-data";
 
 export function TransactionModal({
   open,
@@ -10,7 +11,7 @@ export function TransactionModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onSubmit: (t: Omit<Transaction, "id"> | Transaction) => void;
+  onSubmit: (t: TransactionPayload | Transaction) => void | Promise<void>;
   initial?: Transaction;
 }) {
   const [type, setType] = useState<"income" | "expense">("expense");
@@ -42,7 +43,7 @@ export function TransactionModal({
 
   if (!open) return null;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(amount);
     if (!title.trim()) return setError("Title is required");
@@ -55,9 +56,12 @@ export function TransactionModal({
       date: new Date(date).toISOString(),
       note: note.trim().slice(0, 200) || undefined,
     };
-    if (initial) onSubmit({ ...payload, id: initial.id });
-    else onSubmit(payload);
-    onClose();
+    try {
+      await onSubmit(initial ? { ...payload, id: initial.id } : payload);
+      onClose();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Unable to save transaction");
+    }
   };
 
   return (
@@ -93,7 +97,7 @@ export function TransactionModal({
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Grocery shopping"
+              placeholder={type === "income" ? "e.g. Salary" : "e.g. Grocery shopping"}
               maxLength={80}
               className="input"
             />
@@ -115,15 +119,17 @@ export function TransactionModal({
             </Field>
           </div>
 
-          <Field label="Category">
-            <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className="input">
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </Field>
+          {type === "expense" && (
+            <Field label="Category">
+              <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className="input">
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           <Field label="Note (optional)">
             <textarea

@@ -29,6 +29,7 @@ import { ChartCard } from "@/components/chart-card";
 import { TransactionModal } from "@/components/transaction-modal";
 import { CategoryDot } from "@/components/category-badge";
 import { useTransactions } from "@/lib/transactions-store";
+import { useAuthSession } from "@/lib/auth-store";
 import { CATEGORY_COLORS, formatCurrency } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 function Dashboard() {
   const { items, add } = useTransactions();
   const [modal, setModal] = useState(false);
+  const { user } = useAuthSession();
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -98,7 +100,7 @@ function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">
-            Welcome back, <span className="text-gradient">Alex</span>
+            Welcome back, <span className="text-gradient">{user?.name?.split(" ")[0] ?? "there"}</span>
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">Here's your financial snapshot for this month.</p>
         </div>
@@ -207,7 +209,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <TransactionModal open={modal} onClose={() => setModal(false)} onSubmit={(t) => add(t as never)} />
+      <TransactionModal open={modal} onClose={() => setModal(false)} onSubmit={(t) => add(t)} />
     </div>
   );
 }

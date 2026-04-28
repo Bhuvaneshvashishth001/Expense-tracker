@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Plus, Search, Pencil, Trash2, ArrowUpRight, ArrowDownRight, Inbox } from "lucide-react";
 import { useTransactions } from "@/lib/transactions-store";
-import { CATEGORIES, Transaction, formatCurrency } from "@/lib/mock-data";
+import { CATEGORIES, formatCurrency } from "@/lib/mock-data";
+import { Transaction } from "@/lib/api";
 import { CategoryBadge } from "@/components/category-badge";
 import { TransactionModal } from "@/components/transaction-modal";
 
@@ -139,9 +140,13 @@ function TransactionsPage() {
         open={open}
         onClose={() => setOpen(false)}
         initial={editing}
-        onSubmit={(t) => {
-          if ("id" in t) update(t.id, t);
-          else add(t);
+        onSubmit={async (t) => {
+          if ("id" in t) {
+            const { id, ...payload } = t;
+            await update(id, payload);
+          } else {
+            await add(t);
+          }
         }}
       />
     </div>

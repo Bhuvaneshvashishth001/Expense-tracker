@@ -1,8 +1,17 @@
 import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuthSession } from "@/lib/auth-store";
 
 export function AppNavbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { theme, toggle } = useTheme();
+  const { user } = useAuthSession();
+  const initials = user?.name
+    ?.split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "SW";
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/70 px-4 backdrop-blur-xl sm:px-6">
       <button
@@ -38,11 +47,11 @@ export function AppNavbar({ onMenuClick }: { onMenuClick: () => void }) {
         </button>
         <div className="ml-1 flex h-10 items-center gap-3 rounded-xl border border-border bg-card pl-1 pr-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary text-sm font-semibold text-primary-foreground">
-            AS
+            {initials}
           </div>
           <div className="hidden text-left sm:block">
-            <p className="text-xs font-semibold leading-tight">Alex Stone</p>
-            <p className="text-[10px] leading-tight text-muted-foreground">Pro plan</p>
+            <p className="text-xs font-semibold leading-tight">{user?.name ?? "SpendWise User"}</p>
+            <p className="text-[10px] leading-tight text-muted-foreground">{user?.plan ?? "Pro plan"}</p>
           </div>
         </div>
       </div>

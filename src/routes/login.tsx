@@ -1,8 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Wallet, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { login } from "@/lib/api";
+import { redirectIfAuthenticated } from "@/lib/auth-guards";
+import { setSession } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: redirectIfAuthenticated,
   head: () => ({
     meta: [
       { title: "Sign in — SpendWise" },
@@ -18,12 +22,23 @@ function Login() {
   const [pw, setPw] = useState("");
   const [show, setShow] = useState(false);
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\S+@\S+\.\S+$/.test(email)) return setErr("Enter a valid email");
     if (pw.length < 6) return setErr("Password must be at least 6 characters");
-    nav({ to: "/dashboard" });
+    setErr("");
+    setLoading(true);
+    try {
+      const response = await login({ email, password: pw });
+      setSession(response.token, response.user);
+      nav({ to: "/dashboard" });
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "Unable to sign in");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,9 +85,10 @@ function Login() {
         {err && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
         <button
           type="submit"
+          disabled={loading}
           className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-primary text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
         >
-          Sign in <ArrowRight className="h-4 w-4" />
+          {loading ? "Signing in..." : "Sign in"} <ArrowRight className="h-4 w-4" />
         </button>
       </form>
     </AuthShell>

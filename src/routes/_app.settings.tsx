@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Lock, Moon, Sun, User, LogOut, Check } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { getNotifications, getProfile, updateNotifications, updateProfile } from "@/lib/api";
+import { clearSession, updateStoredUser } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Settings — SpendWise" }] }),
@@ -11,16 +13,67 @@ export const Route = createFileRoute("/_app/settings")({
 function Settings() {
   const { theme, toggle } = useTheme();
   const nav = useNavigate();
-  const [name, setName] = useState("Alex Stone");
-  const [email, setEmail] = useState("alex@spendwise.app");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
   const [notifs, setNotifs] = useState({ email: true, push: false, weekly: true });
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "SW";
 
-  const save = (e: React.FormEvent) => {
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        const [profile, notifications] = await Promise.all([getProfile(), getNotifications()]);
+        if (!active) return;
+        setName(profile.name);
+        setEmail(profile.email);
+        setNotifs(notifications);
+      } catch (loadError) {
+        if (!active) return;
+        setError(loadError instanceof Error ? loadError.message : "Unable to load profile");
+      }
+    }
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2200);
+    setError("");
+    try {
+      const user = await updateProfile({ name, email });
+      updateStoredUser(user);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2200);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Unable to save profile");
+    }
   };
+
+  async function toggleNotification(key: "email" | "push" | "weekly") {
+    const previous = notifs;
+    const next = { ...previous, [key]: !previous[key] };
+    setNotifs(next);
+    try {
+      const savedNotifications = await updateNotifications(next);
+      setNotifs(savedNotifications);
+      const user = await getProfile();
+      updateStoredUser(user);
+    } catch (toggleError) {
+      setNotifs(previous);
+      setError(toggleError instanceof Error ? toggleError.message : "Unable to save notification preference");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 animate-fade-in">
@@ -33,7 +86,7 @@ function Settings() {
         <form onSubmit={save} className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-primary text-xl font-bold text-primary-foreground shadow-glow">
-              AS
+              {initials}
             </div>
             <button type="button" className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted">
               Change photo
@@ -57,6 +110,7 @@ function Settings() {
               </span>
             )}
           </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </form>
       </Section>
 
@@ -87,7 +141,7 @@ function Settings() {
               <p className="text-xs text-muted-foreground">{n.desc}</p>
             </div>
             <button
-              onClick={() => setNotifs((s) => ({ ...s, [n.key]: !s[n.key as keyof typeof s] }))}
+              onClick={() => toggleNotification(n.key as "email" | "push" | "weekly")}
               className={`relative h-6 w-11 rounded-full transition ${notifs[n.key as keyof typeof notifs] ? "bg-primary" : "bg-muted-foreground/30"}`}
             >
               <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition ${notifs[n.key as keyof typeof notifs] ? "left-[22px]" : "left-0.5"}`} />
@@ -110,7 +164,10 @@ function Settings() {
       </Section>
 
       <button
-        onClick={() => nav({ to: "/login" })}
+        onClick={() => {
+          clearSession();
+          nav({ to: "/login" });
+        }}
         className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
       >
         <LogOut className="h-4 w-4" /> Sign out
