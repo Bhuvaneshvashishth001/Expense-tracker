@@ -40,3 +40,6 @@ The API starts on `http://localhost:8080`.
 - `GET /api/profile/notifications`
 - `PUT /api/profile/notifications`
 - `GET /api/analytics/summary`
+
+
+<!-- "hello world" -->
